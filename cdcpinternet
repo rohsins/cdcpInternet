@@ -1,0 +1,102 @@
+#!/usr/bin/expect -f
+
+set modem /dev/ttyS0
+set timeout 8
+
+exec stty -F $modem 115200 -clocal -echo -istrip -hup
+
+send_user "connecting to $modem\n"
+
+spawn -open [ open $modem { RDWR NONBLOCK } ]
+
+send "AT+CFUN=1,1\r"
+expect "OK"
+sleep 3
+send "AT#SIMDET=0\r"
+expect "OK"
+sleep 0.5
+send "AT#GPIO=6,1,1\r"
+expect "OK"
+sleep 0.5
+send "AT#SIMDET=1\r"
+expect "OK"
+sleep 4
+
+set counter 0
+
+while {$counter < 3} {
+    incr counter
+    send "AT+CPIN?\r"
+    expect {
+	"+CPIN: READY" {
+	    sleep 0.5
+	    send "AT+CREG?\r"
+	    expect {
+		"+CREG: 0,1" {
+		    sleep 0.5
+		    send "AT&K0\r"
+		    expect "OK"
+		    sleep 0.5
+		    send "AT\Q\r"
+		    expect "OK" {
+			sleep 0.5
+			send "AT#GAUTH=0\r"
+			expect "OK" {
+			    sleep 0.5
+			    send "AT+CUSD=0\r"
+			    expect "OK" {
+				sleep 0.5
+				send "AT+CGCLASS=B\r"
+				expect "OK" {
+				    sleep 1
+				    spawn pon "provider"
+				    sleep 2
+				    exit
+				}
+			    }
+			}
+		    }
+		}
+		"+CREG: 0,5" {
+		    sleep 0.5
+		    send "AT&K0\r"
+		    expect "OK"
+		    sleep 0.5
+		    send "AT\Q\r"
+		    expect "OK" {
+			sleep 0.5
+			send "AT#GAUTH=0\r"
+			expect "OK" {
+			    sleep 0.5
+			    send "AT+CUSD=0\r"
+			    expect "OK" {
+				sleep 0.5
+				send "AT+CGCLASS=B\r"
+				expect "OK" {
+				    sleep 1
+				    spawn pon "provider"
+				    sleep 2
+				    exit
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+	"ERROR" {
+	    sleep 0.5
+	    send "AT#SIMDET=0\r"
+	    expect "OK"
+	    sleep 2
+	    send "AT#GPIO=6,1,1\r"
+	    expect "OK"
+	    sleep 2
+	    send "AT#SIMDET=1\r"
+	    expect "OK"
+	    sleep 2
+	}
+    }
+}
+
+send_user "cdcpinternet connection timeout\r\n"

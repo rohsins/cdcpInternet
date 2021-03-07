@@ -1,0 +1,47 @@
+#!/bin/sh
+
+count=0
+disasterCount=0
+
+sleep 120
+
+while [ -e /dev/ttyACM0 ]
+do
+	if (ifconfig ppp0 | grep UP) > /dev/null
+	then 
+		if [ $count -gt 0 ]
+		then
+			count=0
+			echo "resetting counter"
+		fi
+	else 
+		echo "restarting provider:" $count
+		count=$((count+1))
+		if [ $count -gt 4 ]
+		then
+			echo "disaster"
+			if ( ps cax | grep pppd ) > /dev/null
+			then
+				poff provider
+				sleep 1
+			fi
+			/home/pi/netstart 
+			sleep 10 
+			disasterCount=$((disasterCount+1))
+			if [ $disasterCount -gt 3 ]
+			then
+				/home/pi/rebootme
+			fi
+		else
+			if ( ps cax | grep pppd ) > /dev/null
+			then
+				poff provider
+				sleep 1
+			fi
+			pon provider
+			sleep 8
+		fi
+	fi
+	sleep 5
+done
+

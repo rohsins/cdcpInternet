@@ -1,0 +1,12 @@
+#!/bin/sh
+
+systemctl stop lorawan
+sleep 3
+if ( ps cax | grep pppd ) > /dev/null
+then
+	poff provider
+	sleep 5
+fi
+rm -r /var/log/*
+sleep 2
+/sbin/reboot
