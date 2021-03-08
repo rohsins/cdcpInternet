@@ -1,0 +1,114 @@
+#!/bin/bash
+
+echo 4 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio4/direction
+echo 1 > /sys/class/gpio/gpio4/value
+
+mFlag=0
+modemRestartCount=0
+modemRestartLimit=2
+
+echo 0 > /tmp/modemInit
+echo 0 > /tmp/ponStatus
+
+sleep 2
+
+ponFunction() {
+    read -r modemStatus < /tmp/modemInit
+    read -r ponStatus < /tmp/ponStatus
+    
+    if [[ modemStatus -eq 1 ]]
+    then
+	if [[ ponStatus -eq 0 ]]
+	then
+	    pon provider
+	    echo 1 > /tmp/ponStatus
+	elif [[ ponStatus -eq 1 ]]
+	then
+	    poff provider
+	    echo 0 > /tmp/ponStatus
+	    pon provider
+	    echo 1 > /tmp/ponStatus
+	fi
+    fi
+}
+
+poffFunction() {
+    read -r ponStatus < /tmp/ponStatus
+    
+    if [[ ponStatus -eq 1 ]]
+    then
+	poff provider
+	echo 0 > /tmp/ponStatus
+    fi
+}
+
+while [ -z "$ONLINE" ]
+do
+    ETHSTATUS=$(ifconfig eth0 | grep "inet")
+    if [ -n "$ETHSTATUS" ]
+    then
+	ONLINEETH=$(ping -q -I eth0 -c 1 8.8.8.8 | grep "1 received")
+    else
+	ONLINEETH=""
+    fi
+    if [ -z "$ONLINEETH" ]
+    then
+	PPPSTATUS=$(ifconfig | grep "ppp")
+	if [ -z "$PPPSTATUS" ]
+	then
+	    read -r isModemInit < /tmp/modemInit
+	    if [[ isModemInit -eq 1 ]]
+	    then
+		#echo "ppp connection"
+		ponFunction
+		sleep 10
+	    else
+		echo "cdcp init sequence"
+		#isModemInit=1
+		./modemInit
+		ponFunction
+		sleep 10
+	    fi
+	fi
+	if [[ $mFlag -eq 0 ]]
+	then
+	    mFlag=1
+	    ping -q -I ppp0 -c 1 8.8.8.8 > /dev/null
+	fi
+	ONLINEPPP=$(ping -q -I ppp0 -c 1 8.8.8.8 | grep "1 received")
+	if [ -z "$ONLINEPPP" ]
+	then
+	    modemRestartCount=$((modemRestartCount+1))
+	    echo $modemRestartCount
+	    if [[ $modemRestartCount -gt $modemRestartLimit ]]
+	    then
+		echo "resetting modem ..."
+		#isModemInit=0
+		echo 0 > /tmp/modemInit
+		modemRestartCount=0
+		echo 0 > /sys/class/gpio/gpio4/value
+		sleep 2
+		echo 1 > /sys/class/gpio/gpio4/value
+		sleep 2
+	    else
+		echo "we are offline!"
+	    fi
+	else
+	    modemRestartCount=0
+	    echo "we are online via modem!"
+	fi
+    else
+	PPPSTATUS=$(ifconfig | grep "ppp")
+	if [ -n "$PPPSTATUS" ]
+	then
+	    poffFunction
+	fi
+	if [[ $mFlag -eq 1 ]]
+	then
+	    mFlag=0
+	fi
+	echo "we are online via ethernet!"
+    fi
+    sleep 10
+done

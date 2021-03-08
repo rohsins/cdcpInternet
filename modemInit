@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 set modem /dev/ttyS0
-set timeout 8
+set timeout 5
 
 exec stty -F $modem 115200 -clocal -echo -istrip -hup
 
@@ -20,7 +20,7 @@ expect "OK"
 sleep 0.5
 send "AT#SIMDET=1\r"
 expect "OK"
-sleep 4
+sleep 2
 
 set counter 0
 
@@ -48,9 +48,8 @@ while {$counter < 3} {
 				sleep 0.5
 				send "AT+CGCLASS=B\r"
 				expect "OK" {
-				    sleep 1
-				    spawn pon "provider"
-				    sleep 2
+				    #spawn pon "provider"
+				    exec echo 1 > /tmp/modemInit
 				    exit
 				}
 			    }
@@ -73,9 +72,8 @@ while {$counter < 3} {
 				sleep 0.5
 				send "AT+CGCLASS=B\r"
 				expect "OK" {
-				    sleep 1
-				    spawn pon "provider"
-				    sleep 2
+				    #spawn pon "provider"
+				    exec echo 1 > /tmp/modemInit
 				    exit
 				}
 			    }
