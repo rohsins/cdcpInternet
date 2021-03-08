@@ -17,16 +17,19 @@ ponFunction() {
     read -r modemStatus < /tmp/modemInit
     read -r ponStatus < /tmp/ponStatus
     
-    if [[ modemStatus -eq 1 ]]
+    if [[ $modemStatus -eq 1 ]]
     then
-	if [[ ponStatus -eq 0 ]]
+	if [[ $ponStatus -eq 0 ]]
 	then
+	    echo "turning pon"
 	    pon provider
 	    echo 1 > /tmp/ponStatus
-	elif [[ ponStatus -eq 1 ]]
+	elif [[ $ponStatus -eq 1 ]]
 	then
+	    echo "turning poff"
 	    poff provider
 	    echo 0 > /tmp/ponStatus
+	    echo "turning pon"
 	    pon provider
 	    echo 1 > /tmp/ponStatus
 	fi
@@ -35,9 +38,10 @@ ponFunction() {
 
 poffFunction() {
     read -r ponStatus < /tmp/ponStatus
-    
-    if [[ ponStatus -eq 1 ]]
+    echo $ponStatus
+    if [[ $ponStatus -eq 1 ]]
     then
+	echo "turning poff"
 	poff provider
 	echo 0 > /tmp/ponStatus
     fi
@@ -58,7 +62,7 @@ do
 	if [ -z "$PPPSTATUS" ]
 	then
 	    read -r isModemInit < /tmp/modemInit
-	    if [[ isModemInit -eq 1 ]]
+	    if [[ $isModemInit -eq 1 ]]
 	    then
 		#echo "ppp connection"
 		ponFunction
