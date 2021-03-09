@@ -1,15 +1,25 @@
 #!/bin/bash
 
-echo 4 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio4/direction
-echo 1 > /sys/class/gpio/gpio4/value
+if [[ ! -d /sys/class/gpio/gpio4 ]]
+then
+    echo 4 > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio4/direction
+    echo 1 > /sys/class/gpio/gpio4/value
+fi
 
 mFlag=0
 modemRestartCount=0
-modemRestartLimit=2
+modemRestartLimit=5
 
-echo 0 > /tmp/modemInit
-echo 0 > /tmp/ponStatus
+if [[ ! -e /tmp/modemInit ]]
+then
+    echo 0 > /tmp/modemInit
+fi
+
+if [[ ! -e /tmp/ponStatus ]]
+then
+    echo 0 > /tmp/ponStatus
+fi
 
 sleep 2
 
@@ -70,7 +80,7 @@ do
 	    else
 		echo "cdcp init sequence"
 		#isModemInit=1
-		./modemInit
+		/etc/internet/modemInit
 		ponFunction
 		sleep 10
 	    fi

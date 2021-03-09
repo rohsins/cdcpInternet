@@ -13,13 +13,13 @@
 # The /etc/chatscripts/pap chat script may be modified to change the
 # modem initialization string.
 #connect "/usr/sbin/chat -v -f /etc/chatscripts/pap -T ********"
-connect "/usr/sbin/chat -v -f /etc/chatscripts/gprs -T web" 
+connect "/usr/sbin/chat -v -f /etc/ppp/peers/3g -T ntnet" 
 
 # Serial device to which the modem is connected.
-/dev/ttyACM0
+/dev/ttyS0
 
 # Speed of the serial line.
-115200
+921600
 
 # Assumes that your IP address is allocated dynamically by the ISP.
 noipdefault

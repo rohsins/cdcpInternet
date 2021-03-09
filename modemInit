@@ -1,17 +1,27 @@
 #!/usr/bin/expect -f
 
 set modem /dev/ttyS0
-set timeout 5
+set timeout 2
 
 exec stty -F $modem 115200 -clocal -echo -istrip -hup
 
-send_user "connecting to $modem\n"
+send_user "Connecting to $modem\n"
 
 spawn -open [ open $modem { RDWR NONBLOCK } ]
 
-send "AT+CFUN=1,1\r"
-expect "OK"
-sleep 3
+send "AT\r"
+expect {
+    "OK" {
+	send "AT+IPR=921600\r"
+	expect "OK" {
+	    exec stty -F $modem 921600 -clocal -echo -istrip -hup
+	}
+    }
+    timeout {
+	exec stty -F $modem 921600 -clocal -echo -istrip -hup
+    }
+}
+
 send "AT#SIMDET=0\r"
 expect "OK"
 sleep 0.5
@@ -24,77 +34,44 @@ sleep 2
 
 set counter 0
 
-while {$counter < 3} {
+while {$counter < 5} {
     incr counter
     send "AT+CPIN?\r"
     expect {
 	"+CPIN: READY" {
-	    sleep 0.5
+	    sleep 6
 	    send "AT+CREG?\r"
 	    expect {
 		"+CREG: 0,1" {
-		    sleep 0.5
 		    send "AT&K0\r"
 		    expect "OK"
-		    sleep 0.5
 		    send "AT\Q\r"
-		    expect "OK" {
-			sleep 0.5
-			send "AT#GAUTH=0\r"
-			expect "OK" {
-			    sleep 0.5
-			    send "AT+CUSD=0\r"
-			    expect "OK" {
-				sleep 0.5
-				send "AT+CGCLASS=B\r"
-				expect "OK" {
-				    #spawn pon "provider"
-				    exec echo 1 > /tmp/modemInit
-				    exit
-				}
-			    }
-			}
-		    }
+		    expect "OK"
+		    exec echo 1 > /tmp/modemInit
+		    exit
 		}
 		"+CREG: 0,5" {
-		    sleep 0.5
 		    send "AT&K0\r"
 		    expect "OK"
-		    sleep 0.5
 		    send "AT\Q\r"
-		    expect "OK" {
-			sleep 0.5
-			send "AT#GAUTH=0\r"
-			expect "OK" {
-			    sleep 0.5
-			    send "AT+CUSD=0\r"
-			    expect "OK" {
-				sleep 0.5
-				send "AT+CGCLASS=B\r"
-				expect "OK" {
-				    #spawn pon "provider"
-				    exec echo 1 > /tmp/modemInit
-				    exit
-				}
-			    }
-			}
-		    }
+		    expect "OK"
+		    exec echo 1 > /tmp/modemInit
+		    exit
 		}
 	    }
 	}
 	"ERROR" {
-	    sleep 0.5
 	    send "AT#SIMDET=0\r"
 	    expect "OK"
-	    sleep 2
 	    send "AT#GPIO=6,1,1\r"
 	    expect "OK"
-	    sleep 2
 	    send "AT#SIMDET=1\r"
 	    expect "OK"
 	    sleep 2
 	}
     }
 }
+
+exec echo 1 > /tmp/modemInit
 
 send_user "cdcpinternet connection timeout\r\n"
