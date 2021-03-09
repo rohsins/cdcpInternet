@@ -48,7 +48,6 @@ ponFunction() {
 
 poffFunction() {
     read -r ponStatus < /tmp/ponStatus
-    echo $ponStatus
     if [[ $ponStatus -eq 1 ]]
     then
 	echo "turning poff"
@@ -79,7 +78,6 @@ do
 		sleep 10
 	    else
 		echo "cdcp init sequence"
-		#isModemInit=1
 		/etc/internet/modemInit
 		ponFunction
 		sleep 10
@@ -98,7 +96,6 @@ do
 	    if [[ $modemRestartCount -gt $modemRestartLimit ]]
 	    then
 		echo "resetting modem ..."
-		#isModemInit=0
 		echo 0 > /tmp/modemInit
 		modemRestartCount=0
 		echo 0 > /sys/class/gpio/gpio4/value
