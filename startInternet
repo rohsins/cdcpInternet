@@ -74,7 +74,7 @@ do
 	ONLINEWLAN=""
     fi
     
-    if [ ! -z "$ONLINEETH" ]
+    if [ -n "$ONLINEETH" ]
     then
 	PPPSTATUS=$(ifconfig | grep "ppp")
 	if [ -n "$PPPSTATUS" ]
@@ -86,7 +86,7 @@ do
 	    mFlag=0
 	fi
 	echo "we are online via ethernet!"
-    elif [ ! -z "$ONLINEWLAN" ]
+    elif [ -n "$ONLINEWLAN" ]
     then
 	PPPSTATUS=$(ifconfig | grep "ppp")
 	if [ -n "$PPPSTATUS" ]
