@@ -65,8 +65,40 @@ do
     else
 	ONLINEETH=""
     fi
-    if [ -z "$ONLINEETH" ]
+
+    WLANSTATUS=$(ifconfig wlan0 | grep "inet")
+    if [ -n "$WLANSTATUS" ]
     then
+	ONLINEWLAN=$(ping -q -I wlan0 -c 1 8.8.8.8 | grep "1 received")
+    else
+	ONLINEWLAN=""
+    fi
+    
+    if [ ! -z "$ONLINEETH" ]
+    then
+	PPPSTATUS=$(ifconfig | grep "ppp")
+	if [ -n "$PPPSTATUS" ]
+	then
+	    poffFunction
+	fi
+	if [[ $mFlag -eq 1 ]]
+	then
+	    mFlag=0
+	fi
+	echo "we are online via ethernet!"
+    elif [ ! -z "$ONLINEWLAN" ]
+    then
+	PPPSTATUS=$(ifconfig | grep "ppp")
+	if [ -n "$PPPSTATUS" ]
+	then
+	    poffFunction
+	fi
+	if [[ $mFlag -eq 1 ]]
+	then
+	    mFlag=0
+	fi
+	echo "we are online via wireless LAN!"
+    else
 	PPPSTATUS=$(ifconfig | grep "ppp")
 	if [ -z "$PPPSTATUS" ]
 	then
@@ -109,17 +141,6 @@ do
 	    modemRestartCount=0
 	    echo "we are online via modem!"
 	fi
-    else
-	PPPSTATUS=$(ifconfig | grep "ppp")
-	if [ -n "$PPPSTATUS" ]
-	then
-	    poffFunction
-	fi
-	if [[ $mFlag -eq 1 ]]
-	then
-	    mFlag=0
-	fi
-	echo "we are online via ethernet!"
     fi
     sleep 10
 done
