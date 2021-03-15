@@ -142,6 +142,7 @@ do
 	else
 	    modemRestartCount=0
 	    echo "we are online via modem!"
+	    sleep 50
 	fi
     fi
     sleep 10
