@@ -39,6 +39,7 @@ ponFunction() {
 	    echo "turning poff"
 	    poff provider
 	    echo 0 > /tmp/ponStatus
+	    sleep 2
 	    echo "turning pon"
 	    pon provider
 	    echo 1 > /tmp/ponStatus
