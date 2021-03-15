@@ -72,6 +72,6 @@ while {$counter < 5} {
     }
 }
 
-exec echo 1 > /tmp/modemInit
+exec echo 0 > /tmp/modemInit
 
 send_user "cdcpinternet connection timeout\r\n"
